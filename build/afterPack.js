@@ -3,20 +3,26 @@ const fs = require("fs");
 const path = require("path");
 
 module.exports = async function afterPack(context) {
+  // Only run on Linux builds
   if (context.electronPlatformName !== "linux") return;
 
   const appOutDir = context.appOutDir;
   const exeName = context.packager.appInfo.productFilename;
 
   const appRunPath = path.join(appOutDir, "AppRun");
+
+  // AppRun does NOT exist during linux-unpacked stage.
+  // It only exists for AppImage builds.
   if (!fs.existsSync(appRunPath)) {
-    console.log("[afterPack] AppRun not found:", appRunPath);
+    console.log("[afterPack] No AppRun found (expected for linux-unpacked). Skipping patch.");
     return;
   }
 
   let content = fs.readFileSync(appRunPath, "utf8");
+
+  // Prevent double patching
   if (content.includes("--no-sandbox")) {
-    console.log("[afterPack] AppRun already patched");
+    console.log("[afterPack] AppRun already patched.");
     return;
   }
 
@@ -26,7 +32,7 @@ module.exports = async function afterPack(context) {
   if (content.includes(needle)) {
     content = content.replace(needle, replacement);
   } else {
-    // fallback patch
+    // Fallback regex patch
     content = content.replace(
       /exec "\$HERE\/([^"]+)" "\$@"/,
       `exec "$HERE/$1" --no-sandbox --disable-setuid-sandbox "$@"`
@@ -34,5 +40,5 @@ module.exports = async function afterPack(context) {
   }
 
   fs.writeFileSync(appRunPath, content, "utf8");
-  console.log("[afterPack] Patched AppRun with --no-sandbox");
+  console.log("[afterPack] AppRun patched with --no-sandbox flags.");
 };

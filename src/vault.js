@@ -9,6 +9,17 @@ const VAULT_FILE = "vault.enc";
 const MAGIC = "USBVAULT";
 const VERSION = 1;
 
+// Strong default (personal use, higher resistance)
+const SCRYPT = {
+  name: "scrypt",
+  N: 131072, // change to 65536 if unlock feels too slow
+  r: 8,
+  p: 1,
+  maxmem: 512 * 1024 * 1024
+};
+
+const MIN_PIN_LEN = 10;
+
 function vaultPath() {
   return path.join(app.getPath("userData"), VAULT_FILE);
 }
@@ -17,23 +28,32 @@ function vaultExists() {
   return fs.existsSync(vaultPath());
 }
 
-function deriveKeySync({ pin, keyfileBytes, salt }) {
-  const pinBytes = Buffer.from(String(pin), "utf8");
-  const input = Buffer.concat([pinBytes, Buffer.from([0]), keyfileBytes]);
-
-  // Tuned for your system (prevents MEMORY_LIMIT_EXCEEDED)
-  return crypto.scryptSync(input, salt, 32, {
-    N: 16384,
-    r: 8,
-    p: 1,
-    maxmem: 64 * 1024 * 1024
-  });
+function requirePin(pin) {
+  const p = String(pin ?? "");
+  if (p.length < MIN_PIN_LEN) {
+    throw new Error(`Use a PIN/password of at least ${MIN_PIN_LEN} characters.`);
+  }
+  return p;
 }
 
 async function readKeyfileBytes(keyfilePath) {
   const b = await fsp.readFile(keyfilePath);
   if (b.length < 32) throw new Error("identity.key is too small. Use at least 32 random bytes.");
   return b;
+}
+
+function deriveKeySync({ pin, keyfileBytes, salt }) {
+  const pinBytes = Buffer.from(String(pin), "utf8");
+
+  // Domain-separate PIN from keyfile to avoid ambiguity
+  const input = Buffer.concat([pinBytes, Buffer.from([0]), keyfileBytes]);
+
+  return crypto.scryptSync(input, salt, 32, {
+    N: SCRYPT.N,
+    r: SCRYPT.r,
+    p: SCRYPT.p,
+    maxmem: SCRYPT.maxmem
+  });
 }
 
 function encryptJson({ key, plaintextObj }) {
@@ -66,15 +86,29 @@ async function readVaultFile() {
   if (env.magic !== MAGIC) throw new Error("Not a valid vault file (bad magic).");
   if (env.version !== VERSION) throw new Error("Unsupported vault version.");
 
+  // Enforce that this vault uses the expected KDF
+  if (!env.kdf || typeof env.kdf !== "object" || env.kdf.name !== "scrypt") {
+    throw new Error("Invalid vault KDF metadata.");
+  }
+  if (
+    Number(env.kdf.N) !== SCRYPT.N ||
+    Number(env.kdf.r) !== SCRYPT.r ||
+    Number(env.kdf.p) !== SCRYPT.p
+  ) {
+    throw new Error(
+      "Vault KDF parameters do not match this build. (This build is configured for a single KDF profile.)"
+    );
+  }
+
   return env;
 }
 
 async function createVault({ pin, keyfilePath }) {
-  if (!pin || String(pin).length < 4) throw new Error("Use a PIN/password of at least 4 characters.");
+  const cleanPin = requirePin(pin);
 
   const keyfileBytes = await readKeyfileBytes(keyfilePath);
   const salt = crypto.randomBytes(16);
-  const key = deriveKeySync({ pin, keyfileBytes, salt });
+  const key = deriveKeySync({ pin: cleanPin, keyfileBytes, salt });
 
   const initialVault = {
     createdAt: new Date().toISOString(),
@@ -87,7 +121,7 @@ async function createVault({ pin, keyfilePath }) {
   const envelope = {
     magic: MAGIC,
     version: VERSION,
-    kdf: "scrypt",
+    kdf: { name: "scrypt", N: SCRYPT.N, r: SCRYPT.r, p: SCRYPT.p },
     salt_b64: salt.toString("base64"),
     iv_b64: iv.toString("base64"),
     tag_b64: tag.toString("base64"),
@@ -99,7 +133,7 @@ async function createVault({ pin, keyfilePath }) {
 
 async function unlockVault({ pin, keyfilePath }) {
   if (!vaultExists()) throw new Error("No vault found. Create one first.");
-  if (!pin) throw new Error("PIN/password required.");
+  const cleanPin = requirePin(pin);
 
   const keyfileBytes = await readKeyfileBytes(keyfilePath);
   const env = await readVaultFile();
@@ -109,11 +143,10 @@ async function unlockVault({ pin, keyfilePath }) {
   const tag = Buffer.from(env.tag_b64, "base64");
   const ct = Buffer.from(env.ct_b64, "base64");
 
-  const key = deriveKeySync({ pin, keyfileBytes, salt });
+  const key = deriveKeySync({ pin: cleanPin, keyfileBytes, salt });
 
   try {
     const data = decryptJson({ key, iv, ct, tag });
-    // forward-compat: ensure fields exist
     data.entries ||= [];
     data.updatedAt ||= data.createdAt || new Date().toISOString();
     return data;
@@ -123,14 +156,14 @@ async function unlockVault({ pin, keyfilePath }) {
 }
 
 async function saveVault({ pin, keyfilePath, data }) {
-  if (!pin) throw new Error("PIN required to save.");
+  const cleanPin = requirePin(pin);
   if (!data || typeof data !== "object") throw new Error("Invalid vault data.");
 
   const keyfileBytes = await readKeyfileBytes(keyfilePath);
   const env = await readVaultFile();
 
   const salt = Buffer.from(env.salt_b64, "base64");
-  const key = deriveKeySync({ pin, keyfileBytes, salt });
+  const key = deriveKeySync({ pin: cleanPin, keyfileBytes, salt });
 
   const next = { ...data, updatedAt: new Date().toISOString() };
   const { iv, ct, tag } = encryptJson({ key, plaintextObj: next });
