@@ -1,0 +1,66 @@
+{
+  "name": "usb-vault",
+  "version": "1.2.0",
+  "description": "Local-first password vault backed by a USB identity key.",
+  "main": "main.js",
+  "private": true,
+  "homepage": "https://github.com/iSev7n",
+  "author": {
+    "name": "Thomas Davis",
+    "email": "Tomatarmy@outlook.com"
+  },
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "lint": "eslint \"renderer/**/*.js\"",
+    "format": "prettier --write \"renderer/**/*.{js,css,html,json,md}\"",
+    "checksums": "cd dist && find . -maxdepth 1 -type f -print0 | xargs -0 sha256sum > SHA256SUMS.txt"
+  },
+  "devDependencies": {
+    "electron": "^32.0.0",
+    "electron-builder": "^26.8.1",
+    "eslint": "^9.39.3",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "prettier": "^3.8.1"
+  },
+  "build": {
+    "appId": "com.thomas.usbvault",
+    "productName": "USB Vault",
+    "afterPack": "build/afterPack.js",
+    "files": [
+      "**/*",
+      "!**/*.md",
+      "!**/.git/**",
+      "!dist/**"
+    ],
+    "directories": {
+      "buildResources": "build",
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icons"
+    },
+    "linux": {
+      "target": [
+        "deb",
+        "AppImage"
+      ],
+      "category": "Utility"
+    },
+    "deb": {
+      "afterInstall": "build/linux/afterInstall.sh"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "build/icons"
+    }
+  }
+}

@@ -1,0 +1,860 @@
+/* =========================
+   USB Vault - Clean Theme CSS
+   Theme system:
+   - Keep surfaces neutral
+   - Themes only change accents + subtle glow
+   - Light theme flips the whole palette
+   ========================= */
+
+:root {
+  /* Base (Dark) */
+  --bg: #0b0f14;
+
+  --panel: rgba(22, 27, 34, 0.78);
+  --panel2: rgba(22, 27, 34, 0.92);
+
+  --border: rgba(48, 54, 61, 0.92);
+
+  --text: #c9d1d9;
+  --muted: rgba(139, 148, 158, 0.95);
+
+  /* Inputs / buttons surfaces (neutral) */
+  --input-bg: rgba(13, 17, 23, 0.88);
+  --btn-bg: rgba(22, 27, 34, 0.86);
+  --btn-bg-ghost: rgba(22, 27, 34, 0.7);
+
+  /* Accent colors (theme driven) */
+  --accent: #6aa8ff;
+  --accent2: #b28cff;
+
+  /* Background glow (theme driven) */
+  --glow1: rgba(106, 168, 255, 0.14);
+  --glow2: rgba(178, 140, 255, 0.12);
+
+  /* Status */
+  --good: #2bdc8f;
+  --warn: #ff5a5a;
+  --danger: #ff4d6d;
+
+  --radius: 18px;
+}
+
+/* -------------------------
+   Theme Overrides
+   ------------------------- */
+
+:root[data-theme="dark"] {
+  --bg: #05070b;
+
+  /* darker, less tinted surfaces */
+  --panel: rgba(10, 12, 16, 0.84);
+  --panel2: rgba(10, 12, 16, 0.95);
+
+  /* calmer borders */
+  --border: rgba(255, 255, 255, 0.1);
+
+  /* text stays crisp */
+  --text: #e6edf3;
+  --muted: rgba(200, 210, 220, 0.62);
+
+  /* inputs/buttons darker */
+  --input-bg: rgba(7, 9, 12, 0.92);
+  --btn-bg: rgba(14, 16, 20, 0.88);
+  --btn-bg-ghost: rgba(14, 16, 20, 0.7);
+
+  /* accents stay, but glows are minimal */
+  --accent: #6aa8ff;
+  --accent2: #b28cff;
+  --glow1: rgba(106, 168, 255, 0.06);
+  --glow2: rgba(178, 140, 255, 0.05);
+}
+
+:root[data-theme="blue"] {
+  /* Stronger blue identity */
+  --accent: #3aa9ff;
+  --accent2: #2f6bff;
+
+  /* Make the overall app feel blue without killing readability */
+  --bg: #07131f;
+
+  /* Slight blue tint on surfaces */
+  --panel: rgba(12, 24, 38, 0.82);
+  --panel2: rgba(12, 24, 38, 0.94);
+
+  /* Borders read blue-ish */
+  --border: rgba(90, 160, 255, 0.2);
+
+  /* Inputs / buttons still neutral-ish but slightly blue */
+  --input-bg: rgba(6, 14, 22, 0.88);
+  --btn-bg: rgba(14, 26, 40, 0.86);
+  --btn-bg-ghost: rgba(14, 26, 40, 0.7);
+
+  /* Bigger, more obvious blue glow */
+  --glow1: rgba(58, 169, 255, 0.3);
+  --glow2: rgba(47, 107, 255, 0.22);
+}
+
+:root[data-theme="purple"] {
+  --accent: #9b7bff;
+  --accent2: #d28bff;
+  --glow1: rgba(155, 123, 255, 0.16);
+  --glow2: rgba(210, 139, 255, 0.12);
+}
+
+:root[data-theme="green"] {
+  --accent: #2dd4bf;
+  --accent2: #7ee787;
+  --glow1: rgba(45, 212, 191, 0.14);
+  --glow2: rgba(126, 231, 135, 0.1);
+}
+
+:root[data-theme="light"] {
+  --bg: #f4f6fb;
+
+  --panel: rgba(255, 255, 255, 0.78);
+  --panel2: rgba(255, 255, 255, 0.92);
+
+  --border: rgba(15, 23, 42, 0.14);
+
+  --text: #0f172a;
+  --muted: rgba(30, 41, 59, 0.72);
+
+  --input-bg: rgba(255, 255, 255, 0.92);
+  --btn-bg: rgba(255, 255, 255, 0.92);
+  --btn-bg-ghost: rgba(255, 255, 255, 0.7);
+
+  --accent: #2563eb;
+  --accent2: #7c3aed;
+
+  --glow1: rgba(37, 99, 235, 0.18);
+  --glow2: rgba(124, 58, 237, 0.12);
+
+  --good: #16a34a;
+  --warn: #dc2626;
+  --danger: #be123c;
+}
+
+/* -------------------------
+   Global
+   ------------------------- */
+
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family:
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Arial,
+    sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(1100px 650px at 20% 10%, var(--glow1), transparent 60%),
+    radial-gradient(900px 600px at 85% 15%, var(--glow2), transparent 55%),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--bg) 85%, #000 15%),
+      var(--bg) 55%,
+      color-mix(in srgb, var(--bg) 85%, #000 15%)
+    );
+  overflow: hidden;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Modern thin scrollbars (Chromium / Electron) */
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+*::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(201, 209, 217, 0.2);
+  border-radius: 999px;
+  border: 2px solid rgba(0, 0, 0, 0);
+  background-clip: padding-box;
+}
+:root[data-theme="light"] *::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.18);
+}
+*::-webkit-scrollbar-thumb:hover {
+  opacity: 0.9;
+}
+
+/* Optional glow layer if you use it */
+.bg-glow {
+  position: fixed;
+  inset: -200px;
+  background:
+    radial-gradient(circle at 30% 30%, var(--glow1), transparent 45%),
+    radial-gradient(circle at 70% 40%, var(--glow2), transparent 45%);
+  filter: blur(32px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.app {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 22px 22px 30px;
+}
+
+/* -------------------------
+   Top Bar
+   ------------------------- */
+
+.topbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+h1 {
+  margin: 0 0 6px;
+  font-size: 34px;
+  letter-spacing: 0.2px;
+}
+.sub {
+  margin: 0;
+  color: var(--muted);
+}
+
+.statusbar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.iconbtn {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+
+.pill {
+  padding: 10px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 13px;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+:root[data-theme="light"] .pill {
+  background: rgba(15, 23, 42, 0.04);
+}
+
+.pill.good {
+  background: color-mix(in srgb, var(--good) 18%, transparent);
+  border-color: color-mix(in srgb, var(--good) 35%, transparent);
+}
+.pill.warn {
+  background: color-mix(in srgb, var(--warn) 16%, transparent);
+  border-color: color-mix(in srgb, var(--warn) 32%, transparent);
+}
+
+/* Light theme: status pills should be filled */
+:root[data-theme="light"] .pill {
+  background: rgba(37, 99, 235, 0.1); /* default filled */
+  border-color: rgba(37, 99, 235, 0.22);
+  color: #0f172a;
+}
+
+/* Keep good/warn special colors filled too */
+:root[data-theme="light"] .pill.good {
+  background: rgba(22, 163, 74, 0.22);
+  border-color: rgba(22, 163, 74, 0.36);
+}
+
+:root[data-theme="light"] .pill.warn {
+  background: rgba(220, 38, 38, 0.22);
+  border-color: rgba(220, 38, 38, 0.36);
+}
+
+/* -------------------------
+   Inputs / Buttons
+   ------------------------- */
+
+input,
+textarea,
+select,
+pre {
+  width: 100%;
+  padding: 12px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--text);
+  outline: none;
+}
+
+textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+button {
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--btn-bg);
+  color: var(--text);
+  cursor: pointer;
+}
+
+button.primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+  color: #ffffff;
+}
+
+:root[data-theme="light"] button.primary {
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+button.ghost {
+  background: var(--btn-bg-ghost);
+}
+
+button.danger {
+  background: color-mix(in srgb, var(--danger) 16%, transparent);
+  border-color: color-mix(in srgb, var(--danger) 28%, var(--border));
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn.danger {
+  padding: 10px 12px;
+  border-radius: 999px;
+}
+
+/* Focus ring without layout shift */
+button:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 28%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+}
+
+/* Button micro-interactions */
+button {
+  transition:
+    transform 0.06s ease,
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+button:hover:not(:disabled) {
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.18);
+  transform: translateY(-1px);
+}
+
+:root[data-theme="light"] button:hover:not(:disabled) {
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.12);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(0px);
+  box-shadow: none;
+}
+
+button.primary:hover:not(:disabled) {
+  box-shadow: 0 14px 26px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+button.danger:hover:not(:disabled) {
+  box-shadow: 0 14px 26px color-mix(in srgb, var(--danger) 16%, transparent);
+}
+
+/* Improve the small subtitle under action titles (example: "Save a new login or secure note") */
+.actionDesc {
+  color: color-mix(in srgb, var(--text) 78%, transparent);
+  opacity: 0.95;
+}
+
+/* If the action tile is a primary/gradient button, keep subtitle readable */
+.actionTile.primary .actionDesc,
+button.primary .actionDesc {
+  color: rgba(255, 255, 255, 0.88);
+  opacity: 1;
+}
+
+/* -------------------------
+   Layout Helpers
+   ------------------------- */
+
+.row {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.row.tight {
+  margin-top: 10px;
+  flex-wrap: nowrap;
+}
+.row.tight input {
+  flex: 1 1 auto;
+  min-width: 240px;
+}
+.row.tight select {
+  flex: 0 0 220px;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* -------------------------
+   Cards
+   ------------------------- */
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(10px);
+}
+
+:root[data-theme="light"] .card {
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1);
+}
+
+.card-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+h2 {
+  margin: 0;
+  font-size: 18px;
+}
+.hint {
+  color: var(--muted);
+  font-size: 13px;
+  letter-spacing: 0.1px;
+  position: relative;
+  top: 20px;
+}
+
+.hint2 {
+  color: var(--muted);
+  font-size: 13px;
+  letter-spacing: 0.1px;
+  position: relative;
+}
+
+.lbl {
+  display: block;
+  margin: 10px 0 8px;
+  color: var(--muted);
+}
+
+.msg {
+  margin: 10px 0 0;
+  min-height: 18px;
+}
+
+/* -------------------------
+   Views
+   ------------------------- */
+
+.loginView {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - 150px);
+}
+
+.loginCard {
+  width: min(480px, 100%);
+}
+
+.mainGrid {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 14px;
+  align-items: start;
+  height: calc(100vh - 160px);
+}
+
+.entriesCard {
+  height: 100%;
+}
+.actionsCard {
+  height: fit-content;
+}
+
+.entriesCard {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Actions */
+.actionList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.actionTile {
+  width: 100%;
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.actionTitle {
+  font-weight: 750;
+  font-size: 14px;
+}
+.actionDesc {
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.25;
+}
+
+.actionsHintCard {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  background: color-mix(in srgb, var(--panel2) 60%, transparent);
+}
+
+.actionsHint {
+  margin-top: 6px;
+  line-height: 1.35;
+  opacity: 0.92;
+}
+
+/* Entries internal scroll */
+.entries-wrap {
+  margin-top: 12px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 6px;
+}
+
+#genLen {
+  width: 96px;
+  flex: 0 0 96px;
+}
+
+.entries {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* Entry Cards (neutral surfaces, themed accent only) */
+.entry {
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 12px;
+  transition:
+    transform 0.08s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.entry-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.entry strong {
+  font-size: 14px;
+}
+.entry .meta {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.entry:hover {
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--border));
+  box-shadow: 0 14px 26px rgba(0, 0, 0, 0.18);
+  transform: translateY(-1px);
+}
+
+:root[data-theme="light"] .entry:hover {
+  box-shadow: 0 14px 26px rgba(15, 23, 42, 0.1);
+}
+
+.entry:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+/* -------------------------
+   Modals
+   ------------------------- */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
+  z-index: 50;
+}
+
+:root[data-theme="light"] .modal-backdrop {
+  background: rgba(15, 23, 42, 0.34);
+}
+
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: min(600px, calc(100vw - 24px));
+  transform: translate(-50%, -50%);
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+  z-index: 60;
+  padding: 14px;
+  max-height: calc(100vh - 60px);
+  overflow: auto;
+  animation: modalIn 0.12s ease-out;
+}
+
+:root[data-theme="light"] .modal {
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
+}
+
+#confirmModal {
+  width: min(360px, calc(100vw - 40px));
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.modal-sub {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.field {
+  background: color-mix(in srgb, var(--panel) 70%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.field-label {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.field-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.field-row textarea {
+  min-height: 110px;
+}
+.field-row button {
+  white-space: nowrap;
+}
+
+/* -------------------------
+   Toast
+   ------------------------- */
+
+/* ---------- Toast (bottom-right) ---------- */
+.toast {
+  position: fixed;
+  right: 28px;
+  bottom: 24px;
+  z-index: 9999;
+
+  width: min(520px, calc(100vw - 48px));
+  padding: 14px 16px;
+
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(8, 14, 22, 0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  box-shadow:
+    0 18px 48px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+
+  transform: translateY(10px);
+  opacity: 0;
+  pointer-events: none;
+
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Keep your hidden class working */
+.toast.hidden {
+  display: none;
+}
+
+.toast-title {
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  font-size: 14px;
+  line-height: 1.15;
+  margin-bottom: 4px;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.toast-msg {
+  font-size: 13px;
+  line-height: 1.25;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* Accent strip on the left for type */
+.toast::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 4px;
+  border-radius: 10px;
+  background: rgba(120, 180, 255, 0.9);
+  box-shadow: 0 0 18px rgba(120, 180, 255, 0.35);
+}
+
+/* Type variants */
+.toast.info::before {
+  background: rgba(120, 180, 255, 0.92);
+  box-shadow: 0 0 18px rgba(120, 180, 255, 0.35);
+}
+
+.toast.good::before {
+  background: rgba(90, 220, 170, 0.92);
+  box-shadow: 0 0 18px rgba(90, 220, 170, 0.35);
+}
+
+.toast.bad::before {
+  background: rgba(255, 105, 125, 0.92);
+  box-shadow: 0 0 18px rgba(255, 105, 125, 0.35);
+}
+
+/* -------------------------
+   Responsive
+   ------------------------- */
+
+@media (max-width: 980px) {
+  body {
+    overflow: auto;
+  }
+  .loginView {
+    height: auto;
+    padding-top: 10px;
+  }
+  .mainGrid {
+    grid-template-columns: 1fr;
+  }
+  .entries {
+    grid-template-columns: 1fr;
+  }
+  .row.tight {
+    flex-wrap: wrap;
+  }
+  .row.tight select {
+    flex: 1 1 220px;
+  }
+  .grid2 {
+    grid-template-columns: 1fr;
+  }
+}

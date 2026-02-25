@@ -1,0 +1,391 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;
+    "
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>USB Vault</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="bg-glow"></div>
+
+    <div class="app">
+      <header class="topbar">
+        <div>
+          <h1>USB Vault</h1>
+          <p class="sub">Plug in your USB key, unlock, and manage logins and secure notes.</p>
+        </div>
+
+        <div class="statusbar">
+          <div id="usbStatus" class="pill warn">USB: checking…</div>
+          <div id="vaultStatus" class="pill warn">Vault: checking…</div>
+          <div id="lockStatus" class="pill warn">State: locked</div>
+
+          <!-- About / Info (custom, replaces the default menu bar) -->
+          <button id="btnAbout" class="iconbtn ghost" type="button" aria-label="About">?</button>
+
+          <!-- Settings (only shown when unlocked) -->
+          <button id="btnSettings" class="iconbtn ghost hidden" type="button" aria-label="Settings">⚙</button>
+
+          <!-- Top Lock button (only show when unlocked via JS) -->
+          <button id="btnLockTop" class="btn danger hidden" type="button">Lock</button>
+        </div>
+      </header>
+
+      <!-- LOCKED VIEW: Only Unlock/Create -->
+      <section id="loginView" class="loginView">
+        <section class="card loginCard">
+          <div class="card-title">
+            <h2>Unlock / Create</h2>
+          </div>
+
+          <label class="lbl">PIN / Password</label>
+          <input id="pin" type="password" placeholder="Enter PIN/password" autocomplete="off" />
+
+          <div class="row">
+            <button id="btnCreateUSB">Create USB Key</button>
+            <button id="btnCreate" type="button">Create Vault</button>
+            <button id="btnUnlock" class="primary" type="button">Unlock Vault</button>
+
+            <!-- Keep old Lock button ID for compatibility, but hide it (Lock is top-right now) -->
+            <button id="btnLock" class="danger hidden" type="button">Lock</button>
+          </div>
+          <div class="hint">Locks when USB is removed</div>
+
+          <p id="msg" class="msg"></p>
+        </section>
+      </section>
+
+      <!-- UNLOCKED VIEW: Actions left / Entries right -->
+      <section id="mainView" class="hidden">
+        <div class="mainGrid">
+          <!-- Left: Actions -->
+          <section class="card actionsCard">
+            <div class="card-title">
+              <h2>Actions</h2>
+            </div>
+
+            <div class="actionList">
+              <button id="btnAddEntry" class="actionTile primary" type="button">
+                <span class="actionTitle">Add entry</span>
+                <span class="actionDesc">Save a new login or secure note</span>
+              </button>
+
+              <button id="btnGenOpen" class="actionTile" type="button">
+                <span class="actionTitle">Generate password</span>
+                <span class="actionDesc">Strong random password in one click</span>
+              </button>
+
+              <button id="btnShowAll" class="actionTile" type="button">
+                <span class="actionTitle">Show all logins</span>
+                <span class="actionDesc">Requires PIN re-entry each time</span>
+              </button>
+            </div>
+
+            <div class="actionsHintCard">
+              <div class="hint2">Tip</div>
+              <div class="actionsHint">Lock your vault before removing the USB key.</div>
+            </div>
+          </section>
+
+          <!-- Right: Saved Entries -->
+          <section class="card entriesCard">
+            <div class="card-title">
+              <h2>Saved Entries</h2>
+              <div class="hint">Search, filter category, then “Show Info”.</div>
+            </div>
+
+            <div class="row tight">
+              <input id="search" placeholder="Search by site, username, or notes…" />
+              <select id="categoryFilter">
+                <option value="all">All Categories</option>
+                <option value="Websites">Websites</option>
+                <option value="Apps">Apps</option>
+                <option value="Social Media">Social Media</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div id="entriesWrap" class="entries-wrap">
+              <div id="entriesList" class="entries"></div>
+            </div>
+          </section>
+        </div>
+      </section>
+    </div>
+
+    <!-- Modal backdrop -->
+    <div id="modalBackdrop" class="modal-backdrop hidden"></div>
+
+    <!-- Entry Info Modal -->
+    <div id="entryModal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="modal-head">
+        <div>
+          <div id="entryModalTitle" class="modal-title">Entry</div>
+          <div id="entryModalSub" class="modal-sub"></div>
+        </div>
+        <button id="entryModalClose" class="ghost" type="button">Close</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="field">
+          <div class="field-label">Category</div>
+          <div class="field-row">
+            <select id="entryModalCategory" disabled>
+              <option value="Websites">Websites</option>
+              <option value="Apps">Apps</option>
+              <option value="Social Media">Social Media</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Username / Email</div>
+          <div class="field-row">
+            <input id="entryModalUser" readonly />
+            <button id="copyEntryUser" class="ghost" type="button">Copy</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Password</div>
+          <div class="field-row">
+            <input id="entryModalPass" readonly />
+            <button id="copyEntryPass" class="ghost" type="button">Copy</button>
+            <button id="toggleEntryPass" class="ghost" type="button">Show</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Notes</div>
+          <div class="field-row">
+            <textarea id="entryModalNotes" readonly></textarea>
+            <button id="copyEntryNotes" class="ghost" type="button">Copy</button>
+          </div>
+        </div>
+
+        <p id="entryMsg" class="msg"></p>
+
+        <div class="row">
+          <button id="editEntry" class="primary" type="button">Edit</button>
+          <button id="saveEntry" class="primary hidden" type="button">Save Changes</button>
+          <button id="cancelEdit" class="ghost hidden" type="button">Cancel</button>
+          <button id="deleteEntry" class="danger" type="button">Delete Entry</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Entry Modal -->
+    <div id="addModal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="modal-head">
+        <div>
+          <div class="modal-title">Add Entry</div>
+          <div class="modal-sub">Site + Password required.</div>
+        </div>
+        <button id="addModalClose" class="ghost" type="button">Close</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="grid2">
+          <div class="field">
+            <div class="field-label">Category</div>
+            <select id="category">
+              <option value="Websites">Websites</option>
+              <option value="Apps">Apps</option>
+              <option value="Social Media">Social Media</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div>
+            <input id="site" placeholder="Site (example: gmail.com)" />
+          </div>
+        </div>
+
+        <div class="grid2">
+          <input id="username" placeholder="Username / Email (optional)" />
+          <input id="password" placeholder="Password (required)" />
+        </div>
+        <textarea id="notes" placeholder="Notes (optional)"></textarea>
+
+        <p id="addMsg" class="msg"></p>
+
+        <div class="row">
+          <button id="addEntry" class="primary" type="button">Save Entry</button>
+          <button id="clearForm" class="ghost" type="button">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Re-auth Modal (PIN prompt) -->
+    <div id="reauthModal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="modal-head">
+        <div>
+          <div class="modal-title">Re-enter PIN</div>
+          <div class="modal-sub">Required to show all logins.</div>
+        </div>
+        <button id="reauthClose" class="ghost" type="button">Close</button>
+      </div>
+
+      <div class="modal-body">
+        <label class="lbl">PIN / Password</label>
+        <input id="reauthPin" type="password" placeholder="Enter PIN / Password" autocomplete="off" />
+
+        <div class="row">
+          <button id="reauthConfirm" class="primary" type="button">Confirm</button>
+        </div>
+
+        <p id="reauthMsg" class="msg"></p>
+      </div>
+    </div>
+
+    <!-- All Entries Modal -->
+    <div id="allModal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="modal-head">
+        <div>
+          <div class="modal-title">All Logins</div>
+          <div class="modal-sub">Decrypted list (view only).</div>
+        </div>
+        <button id="allClose" class="ghost" type="button">Close</button>
+      </div>
+
+      <div class="modal-body">
+        <pre id="allOut" style="max-height: 420px; overflow: auto"></pre>
+      </div>
+    </div>
+
+    <!-- Generate Password Modal -->
+    <div id="genModal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="modal-head">
+        <div>
+          <div class="modal-title">Generate Password</div>
+          <div class="modal-sub">Copy will auto-clear in 20 seconds.</div>
+        </div>
+        <button id="genClose" class="ghost" type="button">Close</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="row tight">
+          <input id="genLen" type="number" min="8" max="64" value="20" />
+          <button id="btnGen" class="ghost" type="button">Generate</button>
+          <button id="btnCopyGen" class="primary" type="button">Copy</button>
+        </div>
+        <input id="genOut" placeholder="Generated password appears here" readonly />
+        <p id="genMsg" class="msg"></p>
+      </div>
+    </div>
+
+    <!-- Confirm Delete Modal -->
+    <div id="confirmModal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="modal-head">
+        <div>
+          <div id="confirmTitle" class="modal-title">Confirm</div>
+          <div id="confirmText" class="modal-sub">Are you sure?</div>
+        </div>
+        <button id="confirmClose" class="ghost" type="button">Close</button>
+      </div>
+
+      <div class="modal-body">
+        <p id="confirmWarn" class="msg" style="color: #ff7a86">This action cannot be undone.</p>
+        <div class="row">
+          <button id="confirmCancel" class="ghost" type="button">Cancel</button>
+          <button id="confirmOk" class="danger" type="button">Delete</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="modal-head">
+        <div>
+          <div class="modal-title">Settings</div>
+          <div class="modal-sub">Customize your UI theme.</div>
+        </div>
+        <button id="settingsClose" class="ghost" type="button">Close</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="field">
+          <div class="field-label">Color theme</div>
+          <div class="modal-sub" style="margin-bottom: 10px">
+            Choose a theme. This will apply immediately.
+          </div>
+
+          <div class="row tight" style="align-items: center">
+            <select id="themeSelect">
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+              <option value="green">Green</option>
+              <option value="blue">Blue</option>
+              <option value="purple">Purple</option>
+            </select>
+            <button id="themeApply" class="primary" type="button">Apply</button>
+          </div>
+        </div>
+
+        <div class="actionsHintCard" style="margin-top: 14px">
+          <div class="hint">Note</div>
+          <div class="actionsHint">Themes are saved on this device.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- About Modal -->
+    <div id="aboutModal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="modal-head">
+        <div>
+          <div class="modal-title">About USB Vault</div>
+          <div class="modal-sub">Local-first password vault backed by a USB identity key.</div>
+        </div>
+        <button id="aboutClose" class="ghost" type="button">Close</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="field">
+          <div class="field-label">Developer</div>
+          <div id="aboutDev" style="font-weight: 600">Thomas Davis</div>
+          <div id="aboutTag" class="modal-sub" style="margin-top: 6px">Security + UX focused tools.</div>
+        </div>
+
+        <div class="grid2">
+          <div class="field">
+            <div class="field-label">GitHub</div>
+            <div class="field-row">
+              <input id="aboutGithub" readonly value="https://github.com/iSev7n" />
+              <button id="copyAboutGithub" class="ghost" type="button">Copy</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="field-label">Contact</div>
+            <div class="field-row">
+              <input id="aboutEmail" readonly value="tomatarmy@outlook.com" />
+              <button id="copyAboutEmail" class="ghost" type="button">Copy</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Notes</div>
+          <div class="modal-sub">
+            All data is stored on your machine and encrypted using your PIN + USB keyfile.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast hidden" aria-live="polite" aria-atomic="true">
+      <div id="toastTitle" class="toast-title"></div>
+      <div id="toastMsg" class="toast-msg"></div>
+    </div>
+
+    <script type="module" src="./renderer.js"></script>
+  </body>
+</html>
