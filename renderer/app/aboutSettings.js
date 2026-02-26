@@ -18,7 +18,7 @@ export function bindAboutSettings(dom, state) {
   });
 
   dom.btnSettings?.addEventListener("click", () => {
-    if (!state.currentPin) return;
+    if (!state.isUnlocked) return;
     const t = getSavedTheme();
     if (dom.themeSelect) dom.themeSelect.value = t;
     openModal(dom, state, dom.settingsModal);

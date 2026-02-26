@@ -1,6 +1,6 @@
 // renderer/app/idle.js
 export function resetIdleTimer(state) {
-  if (!state.currentPin) return;
+  if (!state.isUnlocked) return;
   if (state.idleTimer) clearTimeout(state.idleTimer);
 
   state.idleTimer = setTimeout(() => {

@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("usbvault:key-removed", () => {
     stopIdleTimer(state);
     state.unlockedVault = null;
-    state.currentPin = null;
+    state.isUnlocked = false;
     dom.entriesList.innerHTML = "";
     closeAllModals(dom);
     showToast(dom, "Locked", "USB removed. Vault locked.", "warn");
@@ -45,7 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("usbvault:idle-timeout", () => {
     stopIdleTimer(state);
     state.unlockedVault = null;
-    state.currentPin = null;
+    state.isUnlocked = false;
     dom.entriesList.innerHTML = "";
     closeAllModals(dom);
     showToast(dom, "Locked", "Auto-locked after 10 minutes of inactivity.", "warn");

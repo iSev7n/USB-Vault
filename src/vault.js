@@ -145,12 +145,16 @@ async function unlockVault({ pin, keyfilePath }) {
 
   const key = deriveKeySync({ pin: cleanPin, keyfileBytes, salt });
 
+  // Best-effort wipe of keyfileBytes (cannot wipe pin string)
   try {
     const data = decryptJson({ key, iv, ct, tag });
     data.entries ||= [];
     data.updatedAt ||= data.createdAt || new Date().toISOString();
-    return data;
+
+    // return key as sessionKey (Buffer) to keep PIN out of renderer
+    return { data, sessionKey: key };
   } catch {
+    key.fill(0);
     throw new Error("Unlock failed. Wrong PIN or wrong USB key.");
   }
 }
@@ -178,9 +182,28 @@ async function saveVault({ pin, keyfilePath, data }) {
   await writeVaultFile(newEnvelope);
 }
 
+async function saveVaultWithSessionKey({ keyfilePath, data, sessionKey }) {
+  if (!sessionKey || !Buffer.isBuffer(sessionKey)) throw new Error("Session key missing. Unlock required.");
+  if (!data || typeof data !== "object") throw new Error("Invalid vault data.");
+
+  const env = await readVaultFile();
+
+  const next = { ...data, updatedAt: new Date().toISOString() };
+  const { iv, ct, tag } = encryptJson({ key: sessionKey, plaintextObj: next });
+
+  const newEnvelope = {
+    ...env,
+    iv_b64: iv.toString("base64"),
+    tag_b64: tag.toString("base64"),
+    ct_b64: ct.toString("base64")
+  };
+
+  await writeVaultFile(newEnvelope);
+}
+
 module.exports = {
   vaultExists,
   createVault,
   unlockVault,
-  saveVault
+  saveVaultWithSessionKey
 };

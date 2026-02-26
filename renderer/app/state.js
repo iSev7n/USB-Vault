@@ -2,7 +2,7 @@
 export function createState() {
   return {
     unlockedVault: null,
-    currentPin: null,
+    isUnlocked: false,
     lastUsbPresent: false,
     clipboardTimer: null,
 

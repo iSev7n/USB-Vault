@@ -1,8 +1,8 @@
 // renderer/app/vault.js
 export async function saveCurrentVault(state) {
-  if (!state.unlockedVault || !state.currentPin) throw new Error("Vault not unlocked.");
+  if (!state.unlockedVault || !state.isUnlocked) throw new Error("Vault not unlocked.");
   state.unlockedVault.updatedAt = new Date().toISOString();
-  await window.vaultAPI.saveVault(state.currentPin, state.unlockedVault);
+  await window.vaultAPI.saveVault(state.unlockedVault);
 }
 
 export async function unlockVault(pin) {

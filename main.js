@@ -3,7 +3,7 @@ const { app, BrowserWindow, ipcMain, clipboard, Menu } = require("electron");
 const path = require("path");
 
 const { findKeyfilePath, findUsbMountPath, createIdentityKey } = require("./src/usb");
-const { createVault, unlockVault, saveVault, vaultExists } = require("./src/vault");
+const { createVault, unlockVault, saveVaultWithSessionKey, vaultExists } = require("./src/vault");
 
 process.on("uncaughtException", (err) => console.error("Uncaught exception:", err));
 
@@ -50,8 +50,16 @@ app.whenReady().then(() => {
 });
 
 app.on("window-all-closed", () => {
+  clearSessionKey();
   if (process.platform !== "darwin") app.quit();
 });
+
+let sessionKey = null; // Buffer, in-memory only
+
+function clearSessionKey() {
+  if (sessionKey && Buffer.isBuffer(sessionKey)) sessionKey.fill(0);
+  sessionKey = null;
+}
 
 // --- IPC API ---
 ipcMain.handle("usb:status", async () => {
@@ -63,6 +71,11 @@ ipcMain.handle("usb:status", async () => {
     keyPresent: Boolean(keyfilePath),
     keyfilePath: keyfilePath || null,
   };
+});
+
+ipcMain.handle("session:lock", async () => {
+  clearSessionKey();
+  return { ok: true };
 });
 
 ipcMain.handle("usb:createKey", async () => {
@@ -97,14 +110,18 @@ ipcMain.handle("vault:create", async (_evt, { pin }) => {
 ipcMain.handle("vault:unlock", async (_evt, { pin }) => {
   const keyfilePath = await findKeyfilePath();
   if (!keyfilePath) throw new Error("USB keyfile not found. Insert your USB with identity.key.");
-  const data = await unlockVault({ pin, keyfilePath });
-  return { ok: true, data };
+
+  const res = await unlockVault({ pin, keyfilePath }); // { data, sessionKey }
+  sessionKey = res.sessionKey; // Buffer
+  return { ok: true, data: res.data };
 });
 
-ipcMain.handle("vault:save", async (_evt, { pin, data }) => {
+ipcMain.handle("vault:save", async (_evt, { data }) => {
   const keyfilePath = await findKeyfilePath();
   if (!keyfilePath) throw new Error("USB keyfile not found.");
-  await saveVault({ pin, keyfilePath, data });
+  if (!sessionKey) throw new Error("Vault is locked. Unlock required.");
+
+  await saveVaultWithSessionKey({ keyfilePath, data, sessionKey });
   return { ok: true };
 });
 

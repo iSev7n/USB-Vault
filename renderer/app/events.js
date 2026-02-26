@@ -22,8 +22,8 @@ export function bindEvents(dom, state) {
   dom.backdrop?.addEventListener("click", () => closeAllModals(dom));
 
   // Lock buttons
-  dom.btnLockTop?.addEventListener("click", () => lockNow(dom, state, "Locked."));
-  dom.btnLock?.addEventListener("click", () => lockNow(dom, state, "Locked by user."));
+  dom.btnLockTop?.addEventListener("click", () => void lockNow(dom, state, "Locked."));
+  dom.btnLock?.addEventListener("click", () => void lockNow(dom, state, "Locked by user."));
 
   // List “Show Info”
   dom.entriesList?.addEventListener("click", (ev) => {
@@ -94,7 +94,7 @@ export function bindEvents(dom, state) {
         ...en,
       }));
 
-      state.currentPin = pin;
+      state.isUnlocked = true;
 
       dom.authView.classList.add("hidden");
       dom.mainView.classList.remove("hidden");
@@ -107,7 +107,7 @@ export function bindEvents(dom, state) {
 
       showToast(dom, "Unlocked", "Vault opened successfully.", "good");
     } catch (err) {
-      lockNow(dom, state);
+      await lockNow(dom, state);
       showToast(dom, "Unlock failed", toastFromError(err, "Wrong PIN or vault error."), "bad");
     }
   });
@@ -115,11 +115,19 @@ export function bindEvents(dom, state) {
   // Generator modal wiring stays in its own file if you want next
 }
 
-function lockNow(dom, state, reason = "") {
+async function lockNow(dom, state, reason = "") {
   stopIdleTimer(state);
 
+  // Clear sensitive stuff (best effort)
+  try {
+    await window.vaultAPI.copyToClipboard("");
+  } catch {}
+  try {
+    await window.vaultAPI.lockSession(); // only works after you add session:lock IPC + preload
+  } catch {}
+
   state.unlockedVault = null;
-  state.currentPin = null;
+  state.isUnlocked = false;
   dom.entriesList.innerHTML = "";
 
   closeAllModals(dom);

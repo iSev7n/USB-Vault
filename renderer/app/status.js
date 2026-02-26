@@ -14,6 +14,7 @@ export async function refreshStatus(dom, state) {
   const vault = await window.vaultAPI.vaultExists();
   const vaultExists = Boolean(vault.exists);
 
+  // Pills
   if (!usbPresent) {
     setPill(dom.usbStatus, "USB: not detected", "bad");
   } else if (keyPresent) {
@@ -23,24 +24,28 @@ export async function refreshStatus(dom, state) {
   }
 
   setPill(dom.vaultStatus, vaultExists ? "Vault: exists" : "Vault: not found", vaultExists ? "good" : "warn");
+
   setPill(
     dom.lockStatus,
-    state.currentPin ? "State: unlocked" : "State: locked",
-    state.currentPin ? "good" : "warn"
+    state.isUnlocked ? "State: unlocked" : "State: locked",
+    state.isUnlocked ? "good" : "warn"
   );
 
-  dom.btnCreateUSB.disabled = !usbPresent || keyPresent || vaultExists || Boolean(state.currentPin);
-  dom.btnCreate.disabled = !keyPresent || vaultExists || Boolean(state.currentPin);
-  dom.btnUnlock.disabled = !keyPresent || !vaultExists;
-  dom.btnLock.disabled = !state.currentPin;
+  // Button rules
+  dom.btnCreateUSB.disabled = !usbPresent || keyPresent || vaultExists || state.isUnlocked;
+  dom.btnCreate.disabled = !keyPresent || vaultExists || state.isUnlocked;
+  dom.btnUnlock.disabled = !keyPresent || !vaultExists || state.isUnlocked;
+  dom.btnLock.disabled = !state.isUnlocked;
 
-  dom.btnAddEntry.disabled = !keyPresent || !state.currentPin;
-  dom.btnShowAll.disabled = !keyPresent || !state.currentPin;
+  // Actions require unlock + key present
+  dom.btnAddEntry.disabled = !keyPresent || !state.isUnlocked;
+  dom.btnShowAll.disabled = !keyPresent || !state.isUnlocked;
   dom.btnGenOpen.disabled = false;
 
   // If USB key removed while unlocked, notify via event
-  if (state.lastUsbPresent && !keyPresent && state.currentPin) {
+  if (state.lastUsbPresent && !keyPresent && state.isUnlocked) {
     window.dispatchEvent(new CustomEvent("usbvault:key-removed"));
   }
+
   state.lastUsbPresent = keyPresent;
 }

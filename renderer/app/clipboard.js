@@ -14,6 +14,6 @@ export function startClipboardClear(state, seconds = 20) {
 export async function copyText(dom, state, text) {
   resetIdleTimer(state);
   await window.vaultAPI.copyToClipboard(String(text ?? ""));
-  startClipboardClear(state, 20);
-  showToast(dom, "Copied", "Clipboard auto-clears in 20 seconds.", "good");
+  startClipboardClear(state, 15);
+  showToast(dom, "Copied", "Clipboard auto-clears in 15 seconds.", "good");
 }
