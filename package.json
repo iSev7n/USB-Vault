@@ -19,7 +19,7 @@
     "checksums": "cd dist && find . -maxdepth 1 -type f -print0 | xargs -0 sha256sum > SHA256SUMS.txt"
   },
   "devDependencies": {
-    "electron": "^32.0.0",
+    "electron": "^40.6.1",
     "electron-builder": "^26.8.1",
     "eslint": "^9.39.3",
     "eslint-config-prettier": "^10.1.8",
