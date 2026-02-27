@@ -1,83 +1,95 @@
 # USB Vault
+<p align="center">
+  <img 
+    src="https://i.postimg.cc/R0myzrpC/USB-Vault.png" 
+    width="410"
+    style="border-radius:20px; margin-top:6px;"
+  />
+</p>
 
-![Version](https://img.shields.io/badge/version-1.2.0-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
+![Version](https://img.shields.io/badge/version-1.2.0-blue) ![License](https://img.shields.io/badge/license-MIT-green)
 
-Local-first encrypted password vault secured by a USB identity key.
+Local-first encrypted password vault secured by a physical USB identity key.
 
 USB Vault stores all secrets locally and encrypts them using:
-- your PIN/password
-- a physical USB keyfile (`identity.key`)
-- AES-256-GCM encryption
-- scrypt key derivation
 
-No cloud. No account. No tracking.  
+- AES-256-GCM
+- scrypt key derivation
+- A user PIN/password
+- A physical USB keyfile (`identity.key`)
+
+No cloud. No accounts. No tracking.  
 Your USB stick is your identity.
 
 ---
 
-## 🚀 Features
+# 🚀 Features
 
 - 🔐 USB-based identity authentication
 - 🔑 PIN + hardware key encryption
 - 💾 Fully local encrypted vault file
-- 🎲 Password generator
-- 📋 Copy-to-clipboard auto-clear
+- 🎲 Built-in password generator
+- 📋 Clipboard auto-clear
 - ⏱ Idle auto-lock
+- 🔌 Auto-lock on USB removal
 - 🎨 Multiple UI themes  
   Dark • Light • Blue • Green • Purple
-- 🐧 Linux installer (.deb) with auto-configured launcher
+- 🐧 Linux installer (.deb)
 - 📦 Portable AppImage build
 
 ---
 
-## 🧠 How It Works
+# 🧠 How It Works
 
 1. You create a USB keyfile (`identity.key`)
 2. USB Vault derives an encryption key from:
-   - your PIN
-   - the USB keyfile
+   - Your PIN
+   - The USB keyfile
 3. Vault data is encrypted locally and stored on disk
-4. Without BOTH the USB and PIN, the vault cannot be opened
+4. The vault can only be opened with BOTH:
+   - The USB keyfile
+   - The correct PIN
 
-### This means:
+### Practical Meaning
 
-- Steal the computer → vault still locked  
-- Steal the USB → vault still locked  
-- Need both → plus PIN  
-
----
-
-## 🛠 First-Time Setup (Users)
-
-### Step 1 — Create a USB keyfile
-
-Insert a USB drive, open USB Vault, and click **Create USB Key**.
-
-USB Vault will write `identity.key` to the root of the USB drive.
-
-> Advanced / manual option:
->
-> ```bash
-> head -c 64 /dev/urandom > /media/YOURNAME/YOURUSB/identity.key
-> ```
-
-**Do NOT lose this file.**  
-It is required to unlock the vault forever.
+- Steal the computer → vault remains encrypted  
+- Steal the USB → vault remains encrypted  
+- Both required → plus PIN  
 
 ---
 
-### Step 2 — Install USB Vault
+# 🛠 First-Time Setup
 
-#### 🐧 Ubuntu / Linux Mint / Debian
+## Step 1 — Create a USB Keyfile
 
-Download the `.deb` file from Releases and install:
+Insert a USB drive, open USB Vault, and click:
+
+**Create USB Key**
+
+This writes `identity.key` to the root of the USB drive.
+
+Advanced/manual option:
+
+```bash
+head -c 64 /dev/urandom > /media/YOURNAME/YOURUSB/identity.key
+```
+
+⚠ Do NOT lose this file.  
+It is permanently required to unlock the vault.
+
+---
+
+## Step 2 — Install USB Vault
+
+### 🐧 Ubuntu / Linux Mint / Debian
+
+Download the `.deb` from Releases:
 
 ```bash
 sudo apt install ./usb-vault_VERSION_amd64.deb
 ```
 
-Launch from the Start Menu or run:
+Launch from the application menu or:
 
 ```bash
 usb-vault
@@ -85,101 +97,102 @@ usb-vault
 
 ---
 
-#### 📦 Portable Version (AppImage)
+### 📦 Portable Version (AppImage)
 
 ```bash
 chmod +x USB\ Vault.AppImage
 ./USB\ Vault.AppImage
 ```
 
+If you see:
+
+> Cannot mount AppImage, please check your FUSE setup
+
+Install:
+
+```bash
+sudo apt install libfuse2
+```
+
 ---
 
-## 🔐 Creating Your Vault
+# 🔐 Creating Your Vault
 
-1. Insert USB with `identity.key`
+1. Insert USB containing `identity.key`
 2. Open USB Vault
 3. Enter a PIN
 4. Click **Create Vault**
 5. Unlock using PIN + USB
 
-Your vault file is stored locally in:
+Vault file location:
 
 ```
-~/.config/usb-vault/
-
-or
-
 ~/.config/usb-vault/vault.enc
 ```
 
-If you see:
-
-> Cannot mount AppImage, please check your FUSE setup
-
-Install FUSE2:
-
-sudo apt install libfuse2
-
 ---
 
-## 🔒 Security Model
+# 🔒 Security Model
 
 USB Vault uses:
 
-- AES-256-GCM encryption
+- AES-256-GCM authenticated encryption
 - scrypt key derivation
-- random salt per vault
-- authenticated encryption (tamper detection)
-- memory-only decrypted vault while unlocked
-- auto-lock on USB removal
-- clipboard auto-clear
+- Unique random salt per vault
+- Tamper detection via GCM authentication tag
+- Memory-only decrypted vault while unlocked
+- Auto-lock on USB removal
+- Clipboard auto-clear
 
-Your data never leaves your machine.
+All encryption is performed locally.
+
+No data leaves your machine.
 
 ---
 
-## ⚠️ Threat Model
+# ⚠ Threat Model
 
 USB Vault protects against:
 
 - Stolen laptop
-- Lost USB
+- Lost USB device
 - Offline disk inspection
+- Cold storage data extraction
 
 USB Vault does NOT protect against:
 
 - Malware running on your system
 - Keyloggers capturing your PIN
 - A compromised operating system
+- Physical coercion
 
 For maximum security, use USB Vault on a trusted, clean system.
 
 ---
 
-## 🧰 Building From Source
+# 🧰 Building From Source
 
-### Requirements
+## Requirements
 
-- Node.js 20 LTS (recommended)
+- Node.js 20 LTS
 - npm
 - Electron
 
-### Run in development
+## Development
 
 ```bash
 nvm use
 npm ci
+npm start
 ```
 
----
-
-### Build installers
+## Build Installers
 
 ```bash
 npm run dist
 ```
 
-Outputs:
+Artifacts:
 
 ```
 dist/
@@ -189,89 +202,74 @@ dist/
 
 ---
 
-## 🐧 Packaging Notes (Linux)
+# 🐧 Linux Packaging Notes
 
-USB Vault automatically installs:
+The Linux installer automatically configures:
 
-- system launcher
-- icon
-- wrapper to ensure Electron works on all distros
+- System launcher
+- Application icon
+- Runtime wrapper (ensures Electron launches correctly on systems with sandbox/dev-shm restrictions)
 
-The installer ensures the app launches correctly even on systems with sandbox/dev-shm issues.
-
-No manual fixes required after install.
+No manual configuration required after install.
 
 ---
 
-## 📁 Project Structure
+# 📁 Project Structure
 
-main.js         – Electron main process  
-preload.js      – Secure IPC bridge  
-renderer/       – UI modules  
-src/usb.js      – USB detection + key creation  
-src/vault.js    – Encryption logic
+```
+main.js           Electron main process
+preload.js        Secure IPC bridge
+renderer/         UI modules
+src/usb.js        USB detection + key creation
+src/vault.js      Encryption logic
+build/            Packaging scripts
+```
 
 ---
 
-## 💾 Backup Advice
+# 💾 Backup Requirements
 
 You MUST back up:
 
-1. Your USB keyfile
-2. Your PIN (remember it)
-3. Your vault file
+1. Your USB keyfile (`identity.key`)
+2. Your PIN
+3. Your vault file (`vault.enc`)
 
 If you lose the USB keyfile:
-**the vault is permanently unrecoverable.**
+the vault is permanently unrecoverable.
+
+There is no backdoor.
 
 ---
 
-## 📸 Screenshots
+# 📸 Screenshots
 
-_Add screenshots here_
-
-Example:
-
-```
-![Login Screen](docs/screens/login.png)
-![Vault View](docs/screens/vault.png)
-![Add Entry](docs/screens/add.png)
-```
+| | | |
+|---|---|---|
+| <img src="https://i.postimg.cc/KzJ5VwwJ/screenshot1.png" width="100%"> | <img src="https://i.postimg.cc/Y9bxVZZs/screenshot2.png" width="100%"> | <img src="https://i.postimg.cc/DZBcDHHN/screenshot3.png" width="100%"> |
+| <img src="https://i.postimg.cc/nz015gg5/screenshot4.png" width="100%"> | <img src='https://i.postimg.cc/R0myzrpC/USB-Vault.png' border='0' alt='USB-Vault'></a> | <img src="https://i.postimg.cc/SsDG533B/screenshot6.png" width="100%"> |
+| <img src="https://i.postimg.cc/pTqB743N/screenshot7.png" width="100%"> | <img src="https://i.postimg.cc/28KCm5h9/screenshot8.png" alt="screenshot8"> | <img src="https://i.postimg.cc/xCtP7hhh/screenshot5.png" width="100%"> |
 
 ---
 
-## 🏁 Roadmap Ideas
+# 🏁 Roadmap
 
-- Windows installer support
+- Windows installer
 - macOS notarized build
-- Multiple vault profiles
-- USB auto-detect UI indicator
-- Optional encrypted export backup
-- Hardware token support (YubiKey / FIDO)
+- Optional encrypted export / backup
+- Multi-vault profiles
+- Hardware token support (YubiKey / FIDO2)
+- Optional secondary USB factor
 
 ---
 
-## 🤝 Contributing
-
-Pull requests welcome.  
-If you find a bug or security issue, open an Issue.
-
----
-
-## 🔐 Security
-
-For vulnerability reporting and security policy, see [SECURITY.md](SECURITY.md).
-
----
-
-## Reproducible builds
+# 🔐 Reproducible Builds
 
 USB Vault uses a pinned Node version via `.nvmrc`.
 
-### Build (clean, repeatable)
+### Clean Build
 
 ```bash
-# from repo root
 nvm install
 nvm use
 
@@ -281,20 +279,36 @@ npm run format
 npm run dist
 npm run checksums
 ```
-Artifacts will be in dist/ and checksums in dist/SHA256SUMS.txt.
 
+Checksums are written to:
 
-That’s it. “Reproducible” here means: same Node major + locked deps (`package-lock.json`) + same steps.
+```
+dist/SHA256SUMS.txt
+```
 
-### Also add `.nvmrc`
-Create `.nvmrc` with:
+`.nvmrc`:
 
-```txt
+```
 20
 ```
 
+Reproducible here means:
+- Locked dependencies (`package-lock.json`)
+- Same Node major version
+- Same build steps
+
 ---
 
-## 📜 License
+# 🤝 Contributing
 
-MIT License | Thomas Davis
+Pull requests welcome.  
+Security issues should be reported responsibly.
+
+See: [SECURITY.md](SECURITY.md)
+
+---
+
+# 📜 License
+
+MIT License  
+© Thomas Davis
