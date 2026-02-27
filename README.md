@@ -188,8 +188,15 @@ npm start
 
 ## Build Installers
 
+For Debian/Ubuntu
 ```bash
+sudo apt update
+sudo apt install libfuse2
+npm install
 npm run dist
+chmod +x build/linux/afterInstall.sh
+sudo dpkg -i dist/*.deb
+Then look for USB-Vault under applications
 ```
 
 Artifacts:
